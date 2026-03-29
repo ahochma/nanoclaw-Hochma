@@ -478,7 +478,13 @@ export class WhatsAppChannel implements Channel {
         id: await this.translateJid(participant.id),
       })),
     );
-    const normalized = { ...metadata, participants };
+    // Filter out participants whose LID couldn't be resolved to a phone JID.
+    // Baileys will fail to establish signal sessions for @lid participants,
+    // causing "No sessions" / "not-acceptable" errors on group sends.
+    const resolvedParticipants = participants.filter(
+      (p) => !p.id.endsWith('@lid'),
+    );
+    const normalized = { ...metadata, participants: resolvedParticipants };
     const mappedCount = participants.filter(
       (participant, index) => participant.id !== metadata.participants[index]?.id,
     ).length;
